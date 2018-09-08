@@ -21,13 +21,16 @@ func GetSConn() *mgo.Session {
 		if err != nil {
 			log.Fatal("mongod 数据库连接失败:", err)
 		}
+		// sconn.Safe()
 	}
 	return sconn.Clone()
 }
 
 //辅助函数:建立session连接
 func WithSConn(execute func(sconn *mgo.Session) error) error {
-	return execute(GetSConn())
+	sconn := GetSConn()
+	defer sconn.Close()
+	return execute(sconn)
 }
 
 //通过id查找一条数据
