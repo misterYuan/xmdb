@@ -47,6 +47,13 @@ func FindOne(dbName, cName string, des, selector interface{}) error {
 	})
 }
 
+//通过条件查找多条数据
+func Find(dbName, cName string, des, selector interface{}) error {
+	return WithSConn(func(sconn *mgo.Session) error {
+		return sconn.DB(dbName).C(cName).Find(selector).All(des)
+	})
+}
+
 //通过条件找到的条数
 func Count(dbName, cName string, selector interface{}) int {
 	var (
@@ -92,5 +99,37 @@ func UpdateAll(dbName string, cName string, selector, update interface{}) error 
 func UpdateId(dbName string, cName string, id bson.ObjectId, update interface{}) error {
 	return WithSConn(func(sconn *mgo.Session) error {
 		return sconn.DB(dbName).C(cName).UpdateId(id, update)
+	})
+}
+
+//组装pipe函数
+func ComposePipe(cpfs ...func() bson.M) []bson.M {
+	bms := []bson.M{}
+	for _, f := range cpfs {
+		bms = append(bms, f())
+	}
+	return bms
+}
+
+//填充pipe函数
+func FillPipe(cpfs ...func([]bson.M) []bson.M) []bson.M {
+	bms := []bson.M{}
+	for _, f := range cpfs {
+		bms = f(bms)
+	}
+	return bms
+}
+
+//管道筛选
+func Pipe(dbName, cName string, des, pipe interface{}) error {
+	return WithSConn(func(sconn *mgo.Session) error {
+		return sconn.DB(dbName).C(cName).Pipe(pipe).All(des)
+	})
+}
+
+//管道筛选
+func PipeOne(dbName, cName string, des, pipe interface{}) error {
+	return WithSConn(func(sconn *mgo.Session) error {
+		return sconn.DB(dbName).C(cName).Pipe(pipe).One(des)
 	})
 }
