@@ -21,7 +21,8 @@ func GetSConn() *mgo.Session {
 		if err != nil {
 			log.Fatal("mongod 数据库连接失败:", err)
 		}
-		// sconn.Safe()
+		sconn.SetMode(mgo.Strong, true)
+		sconn.Safe()
 	}
 	return sconn.Clone()
 }
